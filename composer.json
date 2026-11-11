@@ -1,0 +1,10 @@
+{
+    "name": "tbav/site",
+    "description": "Tender Bridge Africa Ventures marketing site with server-side geo-gate",
+    "require": {
+        "geoip2/geoip2": "^3.0"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

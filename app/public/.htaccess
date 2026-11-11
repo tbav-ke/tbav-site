@@ -1,0 +1,5 @@
+RewriteEngine On
+# Route every request through the gate (index.php). No direct file access is
+# needed — the site HTML lives outside the web root and is served by index.php.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
