@@ -1,9 +1,9 @@
 FROM php:8.3-apache
 
-# mod_rewrite + tools
+# mod_rewrite + tools (unzip is required by composer to extract dist packages)
 RUN a2enmod rewrite \
  && apt-get update \
- && apt-get install -y --no-install-recommends curl ca-certificates \
+ && apt-get install -y --no-install-recommends curl ca-certificates unzip \
  && rm -rf /var/lib/apt/lists/*
 
 # bcmath helps the pure-PHP MaxMind reader on some platforms
@@ -19,13 +19,15 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-progress
 COPY app/public/  /var/www/html/
 COPY app/private/ /var/www/private/
 
-# GeoIP country DB — DB-IP Lite (CC-BY), fetched at build; try this month then last month.
+# GeoIP country DB — DB-IP Lite (CC-BY). Non-fatal: if the download ever fails,
+# the build still succeeds and the app falls back to ip-api.com at runtime.
 RUN mkdir -p /var/www/geo && cd /tmp \
  && ( curl -fsSL -o db.gz "https://download.db-ip.com/free/dbip-country-lite-$(date +%Y-%m).mmdb.gz" \
    || curl -fsSL -o db.gz "https://download.db-ip.com/free/dbip-country-lite-$(date -d 'last month' +%Y-%m).mmdb.gz" ) \
  && gunzip -c db.gz > /var/www/geo/country.mmdb \
  && rm -f db.gz \
- && chown -R www-data:www-data /var/www/geo
+ && chown -R www-data:www-data /var/www/geo \
+ || echo "WARN: GeoIP DB not bundled at build; runtime will use ip-api.com fallback"
 
 # Allow .htaccess overrides in the web root
 RUN sed -ri 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
