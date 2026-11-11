@@ -32,4 +32,11 @@ RUN mkdir -p /var/www/geo && cd /tmp \
 # Allow .htaccess overrides in the web root
 RUN sed -ri 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
 
+# Persistent data dir (whitelist + leads) + entrypoint that keeps it writable
+# after Coolify mounts the volume over it at runtime.
+RUN mkdir -p /var/www/data && chown -R www-data:www-data /var/www/data \
+ && printf '#!/bin/sh\nmkdir -p /var/www/data\nchown -R www-data:www-data /var/www/data\nexec apache2-foreground\n' > /usr/local/bin/tbav-entry \
+ && chmod +x /usr/local/bin/tbav-entry
+CMD ["tbav-entry"]
+
 EXPOSE 80

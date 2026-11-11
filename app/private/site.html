@@ -77,7 +77,7 @@
   .hero h1 em{ font-style:normal; color:var(--green-bright); }
   .hero .sub{ margin-top:18px; font-size:clamp(15px,1.5vw,18px); color:#cdd9e2; max-width:36em; }
   .hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
-  .hero-stats{ display:flex; gap:26px; flex-wrap:wrap; margin-top:34px; padding-top:22px; border-top:1px solid var(--line-dk); }
+  .hero-stats{ display:flex; justify-content:space-between; gap:26px 30px; flex-wrap:wrap; margin-top:34px; padding-top:22px; border-top:1px solid var(--line-dk); }
   .hero-stats .s{ min-width:0; }
   .hero-stats .s b{ font-family:var(--serif); font-weight:700; font-size:22px; color:#fff; display:block; }
   .hero-stats .s span{ font-size:12px; color:#a9bccb; letter-spacing:.02em; }
@@ -443,12 +443,12 @@
           <a href="#request" class="btn btn-primary">Request your free opportunity brief</a>
           <a href="#live" class="btn btn-ghost">See the US$600M programme →</a>
         </div>
-        <div class="hero-stats">
-          <div class="s"><b>4</b><span>Sectors — Roads · Energy · Water · Health</span></div>
-          <div class="s"><b>Donor-funded</b><span>World Bank · AfDB · UN · EU pipelines</span></div>
-          <div class="s"><b>Nairobi</b><span>On the ground, in-market</span></div>
-        </div>
       </div>
+    </div>
+    <div class="hero-stats">
+      <div class="s"><b>4 Sectors</b><span>Roads · Energy · Water · Health</span></div>
+      <div class="s"><b>Donor-funded</b><span>World Bank · AfDB · UN · EU pipelines</span></div>
+      <div class="s"><b>Nairobi</b><span>On the ground, in-market</span></div>
     </div>
   </div>
 </section>
@@ -619,6 +619,7 @@
             </select>
           </div>
           <div class="field"><label for="f-msg">Anything we should know? (optional)</label><textarea id="f-msg" name="message" placeholder="Your firm's focus, relevant experience, or the opportunity that caught your eye."></textarea></div>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
           <button type="submit" class="btn btn-primary">Request my opportunity brief</button>
           <p class="form-note">We reply from mail@tenderbridgeafrica.com. No cost, no obligation.</p>
         </form>
@@ -674,13 +675,26 @@
       }
     });
   });
-  // Form: demo submit (a real deployment wires this to email/Keila)
+  // Form: POST to /submit (server stores the lead and emails mail@tenderbridgeafrica.com)
   var form = document.getElementById('briefForm');
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!form.checkValidity()){ form.reportValidity(); return; }
-    form.hidden = true;
-    document.getElementById('thanks').classList.add('show');
+    var btn = form.querySelector('button[type="submit"]');
+    var label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Sending…';
+    fetch('/submit', { method:'POST', body:new FormData(form), headers:{'Accept':'application/json'} })
+      .then(function(r){ return r.json().catch(function(){ return { ok: r.ok }; }); })
+      .then(function(res){
+        if(res && res.ok){
+          form.hidden = true;
+          document.getElementById('thanks').classList.add('show');
+        } else { throw new Error('submit failed'); }
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = label;
+        alert('Sorry, we could not submit the form just now. Please email mail@tenderbridgeafrica.com directly.');
+      });
   });
 
   // Scrollspy: highlight the nav link for the section currently in view

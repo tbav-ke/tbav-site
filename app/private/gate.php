@@ -95,3 +95,92 @@ function country_via_api(string $ip): string {
     if ($cc !== '') @file_put_contents($cf, $cc);
     return $cc;
 }
+
+/** Persistent data directory (overridable for local testing). */
+function data_dir(): string {
+    return rtrim(getenv('TBAV_DATA_DIR') ?: '/var/www/data', '/');
+}
+
+/** IPs/CIDRs added at runtime via the unlock link (persisted across redeploys). */
+function dynamic_whitelist(): array {
+    $f = data_dir() . '/allowed_ips.txt';
+    if (!is_readable($f)) return [];
+    $lines = @file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    $out = [];
+    foreach ($lines as $l) {
+        $l = trim($l);
+        if ($l !== '' && $l[0] !== '#') $out[] = $l;
+    }
+    return $out;
+}
+
+/** Append an IP to the persistent whitelist (deduped). */
+function add_dynamic_ip(string $ip): void {
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) return;
+    $dir = data_dir();
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    if (in_array($ip, dynamic_whitelist(), true)) return;
+    @file_put_contents($dir . '/allowed_ips.txt', $ip . "\n", FILE_APPEND | LOCK_EX);
+}
+
+/** Append a lead to the persistent CSV. Returns true on success. */
+function save_lead(array $f): bool {
+    $dir = data_dir();
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    $file = $dir . '/leads.csv';
+    $new = !is_file($file);
+    $fh = @fopen($file, 'a');
+    if (!$fh) return false;
+    @flock($fh, LOCK_EX);
+    if ($new) @fputcsv($fh, ['timestamp', 'ip', 'name', 'company', 'country', 'email', 'sector', 'message']);
+    @fputcsv($fh, [date('c'), $f['ip'] ?? '', $f['name'] ?? '', $f['company'] ?? '', $f['country'] ?? '', $f['email'] ?? '', $f['sector'] ?? '', $f['message'] ?? '']);
+    @flock($fh, LOCK_UN);
+    @fclose($fh);
+    return true;
+}
+
+/** Email a lead via SMTP (configured through env). Returns true if sent. */
+function send_lead_email(array $f): bool {
+    $host = getenv('TBAV_SMTP_HOST');
+    if (!$host || !class_exists('\\PHPMailer\\PHPMailer\\PHPMailer')) return false;
+    $to   = getenv('TBAV_MAIL_TO')   ?: 'mail@tenderbridgeafrica.com';
+    $from = getenv('TBAV_MAIL_FROM') ?: $to;
+    $user = getenv('TBAV_SMTP_USER') ?: $from;
+    $pass = getenv('TBAV_SMTP_PASS') ?: '';
+    $port = (int) (getenv('TBAV_SMTP_PORT') ?: 587);
+    $secure = strtolower(getenv('TBAV_SMTP_SECURE') ?: 'tls');
+    try {
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = $host;
+        $mail->SMTPAuth = true;
+        $mail->Username = $user;
+        $mail->Password = $pass;
+        $mail->SMTPSecure = ($secure === 'ssl')
+            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = $port;
+        $mail->CharSet = 'UTF-8';
+        $mail->setFrom($from, 'TBAV Website');
+        $mail->addAddress($to);
+        if (filter_var($f['email'] ?? '', FILTER_VALIDATE_EMAIL)) {
+            $mail->addReplyTo($f['email'], $f['name'] ?? '');
+        }
+        $mail->Subject = 'New brief request: ' . (($f['company'] ?? '') ?: 'Unknown')
+            . (($f['sector'] ?? '') ? ' (' . $f['sector'] . ')' : '');
+        $mail->Body =
+            "New opportunity-brief request from the website:\n\n" .
+            "Name:    " . ($f['name'] ?? '') . "\n" .
+            "Company: " . ($f['company'] ?? '') . "\n" .
+            "Country: " . ($f['country'] ?? '') . "\n" .
+            "Email:   " . ($f['email'] ?? '') . "\n" .
+            "Sector:  " . ($f['sector'] ?? '') . "\n" .
+            "Message: " . ($f['message'] ?? '') . "\n\n" .
+            "IP: " . ($f['ip'] ?? '') . "   Time: " . date('c') . "\n";
+        $mail->send();
+        return true;
+    } catch (\Throwable $e) {
+        error_log('TBAV mail error: ' . $e->getMessage());
+        return false;
+    }
+}
