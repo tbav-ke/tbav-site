@@ -123,6 +123,55 @@ function add_dynamic_ip(string $ip): void {
     @file_put_contents($dir . '/allowed_ips.txt', $ip . "\n", FILE_APPEND | LOCK_EX);
 }
 
+/** Heuristic spam check for a submitted lead. Returns true if it looks like a bot. */
+function looks_like_spam(array $f): bool {
+    // A URL in the name or company field is a near-certain bot signal.
+    foreach (['name', 'company'] as $k) {
+        if (preg_match('~https?://|www\.~i', (string)($f[$k] ?? ''))) return true;
+    }
+    $msg = (string)($f['message'] ?? '');
+    // Link-stuffed messages (two or more URLs) or BBCode link spam.
+    if (preg_match_all('~https?://~i', $msg, $m) >= 2) return true;
+    if (preg_match('~\[url[=\]]|\[/url\]~i', $msg)) return true;
+    return false;
+}
+
+/**
+ * Per-IP submission rate limit, persisted on disk. Prunes entries older than
+ * the window, counts this IP's recent submissions, and records the new attempt
+ * when under the cap. Fails OPEN on any storage error (never blocks a real lead).
+ * Returns true if the submission is allowed.
+ */
+function rate_ok(string $ip, int $max = 10, int $window = 3600): bool {
+    $dir = data_dir();
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    $file = $dir . '/rate.log';
+    $fh = @fopen($file, 'c+');
+    if (!$fh) return true;
+    @flock($fh, LOCK_EX);
+    $now  = time();
+    $keep = [];
+    $count = 0;
+    rewind($fh);
+    while (($line = fgets($fh)) !== false) {
+        $line = trim($line);
+        if ($line === '') continue;
+        list($t, $xip) = array_pad(explode(' ', $line, 2), 2, '');
+        $t = (int)$t;
+        if ($now - $t > $window) continue; // prune
+        $keep[] = $t . ' ' . $xip;
+        if ($xip === $ip) $count++;
+    }
+    $allowed = $count < $max;
+    if ($allowed) $keep[] = $now . ' ' . $ip;
+    @ftruncate($fh, 0);
+    rewind($fh);
+    @fwrite($fh, $keep ? implode("\n", $keep) . "\n" : '');
+    @flock($fh, LOCK_UN);
+    @fclose($fh);
+    return $allowed;
+}
+
 /** Append a lead to the persistent CSV. Returns true on success. */
 function save_lead(array $f): bool {
     $dir = data_dir();

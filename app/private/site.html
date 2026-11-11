@@ -588,7 +588,7 @@
           </div>
           <div class="row">
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h4l2 5-3 2a12 12 0 006 6l2-3 5 2v4a2 2 0 01-2 2A17 17 0 013 6a2 2 0 012-2z"/></svg>
-            <div><b>Phone / WhatsApp</b><span>+254 737 866 585</span></div>
+            <div><b>Phone / WhatsApp</b><span class="js-phone" data-cc="254" data-a="737" data-b="866" data-c="585">Available on request</span></div>
           </div>
           <div class="row">
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-5.2-7-11a7 7 0 1114 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -604,13 +604,13 @@
             <div class="field"><label for="f-company">Company</label><input id="f-company" name="company" type="text" autocomplete="organization" required></div>
           </div>
           <div class="frow">
-            <div class="field"><label for="f-country">Country</label><input id="f-country" name="country" type="text" autocomplete="country-name"></div>
+            <div class="field"><label for="f-country">Country</label><input id="f-country" name="country" type="text" autocomplete="country-name" required></div>
             <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
           </div>
           <div class="field">
             <label for="f-sector">Sector of interest</label>
-            <select id="f-sector" name="sector">
-              <option value="">Select a sector…</option>
+            <select id="f-sector" name="sector" required>
+              <option value="" disabled selected>Select a sector…</option>
               <option>Roads &amp; highways</option>
               <option>Energy &amp; power</option>
               <option>Water &amp; sanitation</option>
@@ -618,9 +618,10 @@
               <option>More than one / not sure</option>
             </select>
           </div>
-          <div class="field"><label for="f-msg">Anything we should know? (optional)</label><textarea id="f-msg" name="message" placeholder="Your firm's focus, relevant experience, or the opportunity that caught your eye."></textarea></div>
+          <div class="field"><label for="f-msg">Briefly describe what you're looking for</label><textarea id="f-msg" name="message" minlength="15" placeholder="Your firm's focus, relevant experience, and the sector or opportunity you want us to brief you on." required></textarea></div>
           <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
-          <button type="submit" class="btn btn-primary">Request my opportunity brief</button>
+          <input type="hidden" name="elapsed" value="">
+          <button type="submit" class="btn btn-primary">Request your opportunity brief</button>
           <p class="form-note">We reply from mail@tenderbridgeafrica.com. No cost, no obligation.</p>
         </form>
         <div class="thanks" id="thanks">
@@ -652,7 +653,7 @@
         <div>
           <h4>Contact</h4>
           <a href="mailto:mail@tenderbridgeafrica.com">mail@tenderbridgeafrica.com</a>
-          <span>+254 737 866 585</span>
+          <a class="js-phone" data-cc="254" data-a="737" data-b="866" data-c="585" href="#" rel="nofollow">WhatsApp</a>
           <span>Nairobi, Kenya</span>
         </div>
       </div>
@@ -665,6 +666,23 @@
 </footer>
 
 <script>
+  var tbavLoad = Date.now();
+  // Reveal phone/WhatsApp from split data-attributes (keeps the raw number out of the HTML source)
+  (function(){
+    var els = document.querySelectorAll('.js-phone');
+    Array.prototype.forEach.call(els, function(el){
+      var cc=el.getAttribute('data-cc'), a=el.getAttribute('data-a'), b=el.getAttribute('data-b'), c=el.getAttribute('data-c');
+      if(!cc) return;
+      var digits = cc+a+b+c, pretty = '+'+cc+' '+a+' '+b+' '+c, href = 'https://wa.me/'+digits;
+      if(el.tagName === 'A'){
+        el.setAttribute('href', href); el.setAttribute('target','_blank'); el.setAttribute('rel','noopener nofollow'); el.textContent = pretty;
+      } else {
+        var link = document.createElement('a');
+        link.href = href; link.target='_blank'; link.rel='noopener nofollow'; link.textContent = pretty;
+        el.textContent=''; el.appendChild(link);
+      }
+    });
+  })();
   // Smooth in-page scrolling
   document.querySelectorAll('a[href^="#"]').forEach(function(a){
     a.addEventListener('click', function(e){
@@ -680,6 +698,7 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!form.checkValidity()){ form.reportValidity(); return; }
+    try{ form.elapsed.value = Date.now() - tbavLoad; }catch(_){}
     var btn = form.querySelector('button[type="submit"]');
     var label = btn.textContent;
     btn.disabled = true; btn.textContent = 'Sending…';

@@ -60,9 +60,23 @@ if ($path === '/submit' && $method === 'POST') {
     foreach (['name', 'company', 'country', 'email', 'sector', 'message'] as $k) {
         $f[$k] = mb_substr(trim((string)($_POST[$k] ?? '')), 0, 2000);
     }
-    if ($f['name'] === '' || $f['company'] === '' || !filter_var($f['email'], FILTER_VALIDATE_EMAIL)) {
+    // Every field is required; email must be valid; the description must be real.
+    if ($f['name'] === '' || $f['company'] === '' || $f['country'] === ''
+        || $f['sector'] === '' || mb_strlen($f['message']) < 15
+        || !filter_var($f['email'], FILTER_VALIDATE_EMAIL)) {
         http_response_code(422);
         echo json_encode(['ok' => false, 'error' => 'invalid']);
+        exit;
+    }
+    // Bot/spam hardening (office + whitelisted IPs are exempt so testing is never blocked):
+    //   - submit-too-fast time trap (a human cannot complete this form in < 2.5s; a direct POST sends elapsed=0)
+    //   - URL-in-name / link-stuffing heuristics
+    //   - per-IP rate limit
+    // On any trip we return a fake success so bots learn nothing; nothing is stored or emailed.
+    $trusted = ip_in_list($ip, $WHITELIST);
+    $elapsed = (int)($_POST['elapsed'] ?? 0);
+    if (!$trusted && ($elapsed < 2500 || looks_like_spam($f) || !rate_ok($ip))) {
+        echo json_encode(['ok' => true]);
         exit;
     }
     $saved  = save_lead($f);
