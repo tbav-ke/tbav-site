@@ -79,6 +79,13 @@ if ($path === '/submit' && $method === 'POST') {
         echo json_encode(['ok' => true]);
         exit;
     }
+    // Cloudflare Turnstile (only enforced when a secret is configured; fails OPEN if CF is unreachable).
+    $tsSecret = (string) getenv('TBAV_TURNSTILE_SECRET');
+    if (!$trusted && $tsSecret !== ''
+        && !turnstile_ok($tsSecret, (string)($_POST['cf-turnstile-response'] ?? ''), $ip)) {
+        echo json_encode(['ok' => true]);
+        exit;
+    }
     $saved  = save_lead($f);
     $mailed = send_lead_email($f);
     echo json_encode(['ok' => ($saved || $mailed)]);
@@ -100,6 +107,16 @@ if (decide($ip, $country, $WHITELIST, $BLOCK, $cookieValid) === 'block') {
     exit;
 }
 
-// --- serve the site ---
+// --- serve the site (inject Turnstile widget/script only when a site key is configured) ---
 header('Content-Type: text/html; charset=utf-8');
-readfile(__DIR__ . '/../private/site.html');
+$html = (string) file_get_contents(__DIR__ . '/../private/site.html');
+$sitekey = (string) getenv('TBAV_TURNSTILE_SITEKEY');
+if ($sitekey !== '') {
+    $sk = htmlspecialchars($sitekey, ENT_QUOTES);
+    $widget = '<div class="cf-turnstile" data-sitekey="' . $sk . '" data-theme="dark" data-size="flexible" style="margin:2px 0 8px;"></div>';
+    $script = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
+    $html = str_replace(['<!--TURNSTILE_WIDGET-->', '<!--TURNSTILE_SCRIPT-->'], [$widget, $script], $html);
+} else {
+    $html = str_replace(['<!--TURNSTILE_WIDGET-->', '<!--TURNSTILE_SCRIPT-->'], ['', ''], $html);
+}
+echo $html;

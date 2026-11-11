@@ -172,6 +172,46 @@ function rate_ok(string $ip, int $max = 10, int $window = 3600): bool {
     return $allowed;
 }
 
+/**
+ * Verify a Cloudflare Turnstile token with the siteverify API.
+ * Returns true if the token is valid. FAILS OPEN (returns true) if Cloudflare
+ * cannot be reached, so a CF outage never blocks a genuine lead — the other
+ * hardening layers (honeypot, time-trap, rate limit, spam heuristics) still apply.
+ * An empty token returns false (the widget always supplies one for a real submit).
+ */
+function turnstile_ok(string $secret, string $token, string $ip = ''): bool {
+    if ($token === '') return false;
+    $fields = ['secret' => $secret, 'response' => $token];
+    if (filter_var($ip, FILTER_VALIDATE_IP)) $fields['remoteip'] = $ip;
+    $post = http_build_query($fields);
+    $url  = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+    $resp = null;
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $post,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_CONNECTTIMEOUT => 4,
+        ]);
+        $resp = curl_exec($ch);
+        curl_close($ch);
+    }
+    if ($resp === null || $resp === false) {
+        $ctx = stream_context_create(['http' => [
+            'method'  => 'POST',
+            'header'  => 'Content-Type: application/x-www-form-urlencoded',
+            'content' => $post,
+            'timeout' => 6,
+        ]]);
+        $resp = @file_get_contents($url, false, $ctx);
+    }
+    if (!$resp) return true; // fail OPEN on network/transport error
+    $j = json_decode($resp, true);
+    return is_array($j) && !empty($j['success']);
+}
+
 /** Append a lead to the persistent CSV. Returns true on success. */
 function save_lead(array $f): bool {
     $dir = data_dir();

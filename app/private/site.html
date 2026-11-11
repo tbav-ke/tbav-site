@@ -617,6 +617,7 @@
           <div class="field"><label for="f-msg">Briefly describe what you're looking for</label><textarea id="f-msg" name="message" minlength="15" placeholder="Your firm's focus, relevant experience, and the sector or opportunity you want us to brief you on." required></textarea></div>
           <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
           <input type="hidden" name="elapsed" value="">
+          <!--TURNSTILE_WIDGET-->
           <button type="submit" class="btn btn-primary">Request your opportunity brief</button>
           <p class="form-note">We reply from mail@tenderbridgeafrica.com. No cost, no obligation.</p>
         </form>
@@ -677,6 +678,8 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!form.checkValidity()){ form.reportValidity(); return; }
+    var ts = form.querySelector('[name="cf-turnstile-response"]');
+    if(ts && !ts.value){ alert('Just a moment — the security check is still loading. Please tap the button again in a second.'); return; }
     try{ form.elapsed.value = Date.now() - tbavLoad; }catch(_){}
     var btn = form.querySelector('button[type="submit"]');
     var label = btn.textContent;
@@ -709,3 +712,5 @@
     }
   })();
 </script>
+
+<!--TURNSTILE_SCRIPT-->
