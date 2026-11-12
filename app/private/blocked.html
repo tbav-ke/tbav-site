@@ -4,40 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Tender Bridge Africa Ventures</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<title>tenderbridgeafrica.com</title>
 <style>
-  :root{ --navy:#0b2a45; --navy-700:#0e3353; --gold:#c6972f; --line-dk:rgba(255,255,255,.14); }
-  *{ box-sizing:border-box; margin:0; padding:0; }
+  :root{
+    --bg:#ffffff; --fg:#202124; --muted:#5f6368; --icon:#9aa0a6;
+    --btn:#1a73e8; --btn-fg:#ffffff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#202124; --fg:#e8eaed; --muted:#9aa0a6; --icon:#9aa0a6;
+      --btn:#8ab4f8; --btn-fg:#202124;
+    }
+  }
+  *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
-    font-family:'Inter',system-ui,sans-serif;
-    background:
-      radial-gradient(1000px 440px at 80% -10%, rgba(51,160,106,.14), transparent 60%),
-      linear-gradient(180deg, var(--navy), var(--navy-700));
-    color:#eef3f7; min-height:100%;
-    display:flex; align-items:center; justify-content:center; padding:28px;
+    margin:0; background:var(--bg); color:var(--muted);
+    font-family:'Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,Arial,sans-serif;
+    font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    display:flex; align-items:flex-start; justify-content:center; padding:48px 24px;
   }
-  .box{ max-width:540px; text-align:center; }
-  .brand{ font-family:'Source Serif 4',Georgia,serif; font-weight:700; font-size:20px; letter-spacing:.01em; }
-  .brand small{ display:block; font-family:'Inter',sans-serif; font-weight:600; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#9fb2c0; margin-top:6px; }
-  .rule{ width:48px; height:3px; background:var(--gold); border-radius:2px; margin:26px auto; }
-  h1{ font-family:'Source Serif 4',Georgia,serif; font-weight:700; font-size:clamp(24px,4vw,32px); line-height:1.15; }
-  p{ color:#c3d0db; font-size:15.5px; line-height:1.6; margin-top:16px; }
-  a{ color:#fff; text-decoration:none; border-bottom:1px solid var(--gold); padding-bottom:1px; }
-  a:hover{ color:var(--gold); }
-  .foot{ margin-top:30px; font-size:13px; color:#8aa0b0; }
+  .wrap{ width:100%; max-width:600px; margin-top:6vh; }
+  .icon{ width:72px; height:72px; margin-bottom:28px; display:block; }
+  h1{ color:var(--fg); font-weight:400; font-size:26px; line-height:1.3; margin:0 0 18px; }
+  p{ margin:0 0 18px; }
+  .host{ color:var(--fg); }
+  .list .lead{ margin-bottom:2px; }
+  .code{ color:var(--muted); font-size:13px; letter-spacing:.02em; margin:24px 0 0; }
+  .actions{ margin-top:28px; display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+  button.reload{
+    appearance:none; border:0; cursor:pointer; background:var(--btn); color:var(--btn-fg);
+    font-family:inherit; font-size:14px; font-weight:500; padding:9px 22px; border-radius:4px;
+  }
+  button.reload:hover{ filter:brightness(1.05); }
+  button.details{
+    color:var(--btn); font-size:14px; font-weight:500; background:none; border:0;
+    cursor:pointer; font-family:inherit; padding:0;
+  }
+  button.details:hover{ text-decoration:underline; }
+  .more{ display:none; margin-top:20px; font-size:13px; color:var(--muted); }
+  .more.open{ display:block; }
 </style>
 </head>
 <body>
-  <div class="box">
-    <div class="brand">Tender Bridge Africa Ventures<small>Government Tender Advisory</small></div>
-    <div class="rule"></div>
-    <h1>This site isn&rsquo;t available in your region.</h1>
-    <p>Our advisory service is offered to international firms outside the region. If you believe you&rsquo;re seeing this in error, please reach us at <a href="mailto:mail@tenderbridgeafrica.com">mail@tenderbridgeafrica.com</a> and we&rsquo;ll be glad to help.</p>
-    <div class="foot">&copy; Tender Bridge Africa Ventures &middot; Nairobi, Kenya</div>
+  <div class="wrap">
+    <svg class="icon" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M19 9h24l11 11v41a3 3 0 0 1-3 3H19a3 3 0 0 1-3-3V12a3 3 0 0 1 3-3z" fill="var(--icon)"/>
+      <path d="M43 9l11 11H46a3 3 0 0 1-3-3V9z" fill="var(--bg)" fill-opacity=".35"/>
+      <circle cx="30" cy="39" r="2.7" fill="var(--bg)"/>
+      <circle cx="42" cy="39" r="2.7" fill="var(--bg)"/>
+      <path d="M29.5 51c2.3-3.4 10.7-3.4 13 0" fill="none" stroke="var(--bg)" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <h1>This site can&rsquo;t be reached</h1>
+    <p><span class="host" id="host">tenderbridgeafrica.com</span> refused to connect.</p>
+    <div class="list">
+      <div class="lead">Try:</div>
+      <div>Checking the connection</div>
+    </div>
+    <p class="code">ERR_CONNECTION_REFUSED</p>
+    <div class="actions">
+      <button class="reload" onclick="location.reload()">Reload</button>
+      <button class="details" id="detailsBtn">Details</button>
+    </div>
+    <div class="more" id="more">
+      <p style="margin:0 0 10px;color:var(--fg);">This site can&rsquo;t be reached</p>
+      <p style="margin:0;">The webpage at <span id="host2">tenderbridgeafrica.com</span> might be temporarily down or it may have moved permanently to a new web address.</p>
+      <p style="margin:10px 0 0;">ERR_CONNECTION_REFUSED</p>
+    </div>
   </div>
+  <script>
+    try{
+      var h = location.host || 'tenderbridgeafrica.com';
+      document.getElementById('host').textContent = h;
+      document.getElementById('host2').textContent = h;
+      document.title = h;
+    }catch(e){}
+    document.getElementById('detailsBtn').addEventListener('click', function(){
+      var m = document.getElementById('more');
+      m.classList.toggle('open');
+      this.textContent = m.classList.contains('open') ? 'Hide details' : 'Details';
+    });
+  </script>
 </body>
 </html>
