@@ -100,7 +100,7 @@ $cookieValid = $UNLOCK_SECRET !== ''
 $country = ($cookieValid || ip_in_list($ip, $WHITELIST)) ? '' : country_of($ip);
 
 if (decide($ip, $country, $WHITELIST, $BLOCK, $cookieValid) === 'block') {
-    http_response_code(403);
+    http_response_code(503);
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
     readfile(__DIR__ . '/../private/blocked.html');
