@@ -50,3 +50,6 @@ and can be a public repository.
 - From a non-Kenyan network (or VPN): site loads.
 - Visit the unlock link once: cookie set, site loads from anywhere.
 - Confirm a Kenyan IP is blocked (checked server-side against the GeoIP DB).
+
+
+<!-- deploy check 2026-11-13: GitHub to Coolify auto-deploy webhook verified -->
