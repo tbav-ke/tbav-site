@@ -1,4 +1,4 @@
-<title>Tender Bridge Africa</title>
+<title>Tender Bridge Africa</titlhe>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -515,7 +515,7 @@ function hx(cx,cy,r){var p='';for(var k=0;k<6;k++){var a=Math.PI/180*(60*k-90);p
 function init(){
 var svg=document.querySelector('.hexmotif');if(!svg)return;
 var hero=svg.parentElement||svg;
-var W=1600,Hh=520,r=23,dx=r*Math.sqrt(3),dy=r*1.5,row=0,cents=[],polys=[];
+var W=1600,Hh=520,r=14.95,dx=r*Math.sqrt(3),dy=r*1.5,row=0,cents=[],polys=[];
 for(var cy=-dy;cy<Hh+dy;cy+=dy,row++){var off=(row%2)?dx/2:0;for(var cx=-dx;cx<W+dx;cx+=dx){var X=cx+off;var pg=document.createElementNS(NS,'polygon');pg.setAttribute('points',hx(X,cy,r));pg.setAttribute('fill','#c6972f');pg.setAttribute('fill-opacity','0');pg.setAttribute('stroke','#c6972f');pg.setAttribute('stroke-width','1');pg.setAttribute('stroke-opacity','0.16');pg.style.transition='stroke-opacity .3s ease,fill-opacity .3s ease';svg.appendChild(pg);polys.push(pg);cents.push([X,cy]);}}
 var pt=svg.createSVGPoint(),cur=null;
 function clear(){if(cur){cur.style.strokeOpacity='';cur.style.fill='';cur.style.fillOpacity='';cur=null;}}
