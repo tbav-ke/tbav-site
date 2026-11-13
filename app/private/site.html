@@ -70,7 +70,7 @@
       radial-gradient(1200px 500px at 85% -10%, rgba(51,160,106,.16), transparent 60%),
       linear-gradient(180deg, var(--navy), var(--navy-700));
     color:#eef3f7; position:relative; overflow:hidden; }
-  .hero .hexmotif{ position:absolute; inset:0; width:100%; height:100%; opacity:.38; pointer-events:none; }
+  .hero .hexmotif{ position:absolute; inset:0; width:100%; height:100%; opacity:1; pointer-events:none; }
   .hero .wrap{ padding-block:66px 58px; position:relative; }
   .hero-grid{ display:block; max-width:760px; }
   .hero h1{ color:#fff; font-size:clamp(32px,4.3vw,52px); margin-top:16px; letter-spacing:-.01em; }
@@ -194,7 +194,7 @@
     .hero-grid, .gap-grid, .live, .request-grid{ grid-template-columns:1fr; }
     .sectors{ grid-template-columns:1fr 1fr; }
     .why-grid{ grid-template-columns:1fr; }
-    .hero .hexmotif{ opacity:.25; }
+    .hero .hexmotif{ opacity:1; }
   }
   @media (max-width:620px){
     .nav-links{ display:none; }
@@ -234,7 +234,7 @@
       </linearGradient>
       <mask id="hexmask"><rect width="1600" height="520" fill="url(#hexfade)"/></mask>
     </defs>
-    <g stroke="#9fd6ba" stroke-width="1" opacity="0.5" mask="url(#hexmask)">
+    <g stroke="#c6972f" stroke-width="1" stroke-opacity="0.16">
       <polygon points="-40,-66 0,-43 0,3 -40,26 -80,3 -80,-43"/>
       <polygon points="30,-66 70,-43 70,3 30,26 -10,3 -10,-43"/>
       <polygon points="100,-66 140,-43 140,3 100,26 60,3 60,-43"/>
@@ -714,3 +714,19 @@
 </script>
 
 <!--TURNSTILE_SCRIPT-->
+
+<script>/* hexmotif-hover */
+(function(){
+function init(){
+var svg=document.querySelector('.hexmotif');if(!svg)return;
+var hero=svg.parentElement||svg;
+var polys=[].slice.call(svg.querySelectorAll('polygon')),cents=[];
+polys.forEach(function(pg){pg.style.transition='stroke-opacity .3s ease,fill-opacity .3s ease';var pts=pg.getAttribute('points').trim().split(/\s+/),sx=0,sy=0;pts.forEach(function(q){var a=q.split(',');sx+=parseFloat(a[0]);sy+=parseFloat(a[1]);});cents.push([sx/pts.length,sy/pts.length]);});
+var pt=svg.createSVGPoint(),cur=null;
+function clear(){if(cur){cur.style.strokeOpacity='';cur.style.fill='';cur.style.fillOpacity='';cur=null;}}
+hero.addEventListener('pointermove',function(ev){var m=svg.getScreenCTM();if(!m)return;pt.x=ev.clientX;pt.y=ev.clientY;var lp=pt.matrixTransform(m.inverse());var bi=-1,bd=1e12;for(var i=0;i<cents.length;i++){var dx=cents[i][0]-lp.x,dy=cents[i][1]-lp.y,d=dx*dx+dy*dy;if(d<bd){bd=d;bi=i;}}var el=polys[bi];if(el&&el!==cur){clear();el.style.strokeOpacity='0.8';el.style.fill='#c6972f';el.style.fillOpacity='0.14';cur=el;}});
+hero.addEventListener('pointerleave',clear);
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+</script>
